@@ -46,6 +46,25 @@ class Settings(BaseSettings):
     # While the risk engine (Phase 2) is not live, inbound messages get a
     # canned reply. Crisis keyword fallback ships early as belt-and-braces.
     enable_crisis_keyword_fallback: bool = True
+    # Phase 2: full risk pre-screening gate (roadmap 2.3). When enabled the
+    # composite scorer replaces the bare keyword check in the pipeline.
+    enable_risk_engine: bool = True
+
+    # --- Phase 2 risk thresholds (roadmap 2.3) -------------------------------
+    crisis_threshold_pct: float = 85.0     # score > 85 ⇒ Crisis route
+    distress_threshold_pct: float = 45.0   # score > 45 ⇒ Distressed (supportive track)
+
+    # --- Phase 3 counselor dashboard & HITL (roadmap 3.1-3.4) ----------------
+    jwt_secret: str = Field(default="", repr=False)
+    jwt_ttl_minutes: int = 8 * 60          # counselor session lifetime
+    cors_allow_origins: str = "http://localhost:3000"  # comma-separated dashboard origin(s)
+    escalation_sla_seconds: int = 120      # PRD KPI: human sees crisis within 2 minutes
+    notification_channel: str = "log"      # log | whatsapp | email (3.4; prod uses whatsapp+email)
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_user: str = ""
+    smtp_password: str = Field(default="", repr=False)
+    smtp_from: str = "alerts@okoa.ai"
 
     @property
     def is_production(self) -> bool:

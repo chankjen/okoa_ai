@@ -1,12 +1,6 @@
-# Python compiled files
+# Compiled and build artifacts
 __pycache__/
 *.pyc
-
-# Environment and secrets
-.env
-.env.local
-.env.*.local
-!backend/.env.example
 
 # Test artifacts
 *.test.db

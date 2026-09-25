@@ -96,3 +96,25 @@ class IdentityService:
             vault_row.ciphertext = b""
             vault_row.blind_index = "purged:" + vault_row.id
         logger.info("user opted out", extra={"event": "opt_out", "user_uuid": user_uuid})
+
+    async def reveal_msisdn(self, db: AsyncSession, user_uuid: str) -> str | None:
+        """Reverse lookup UUID -> phone, ONLY for outbound delivery.
+
+        Privacy note: the message pipeline already holds the phone transiently
+        from the webhook and never calls this. It exists for the counselor
+        handover reply path (Phase 3), where the dashboard initiated contact
+        without a webhook context. The returned value must never be logged —
+        callers pass it straight to WhatsAppClient.send_text.
+        Returns None when the identity was purged (opt-out tombstone).
+        """
+        row = await db.scalar(
+            select(IdentityVaultRow).where(
+                IdentityVaultRow.user_uuid == user_uuid,
+                IdentityVaultRow.status == "active",
+            )
+        )
+        if row is None or not row.ciphertext:
+            return None
+        return self.vault.decrypt_phone(
+            bytes(row.cipher_nonce), bytes(row.ciphertext), user_uuid
+        )
