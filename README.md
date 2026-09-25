@@ -108,8 +108,10 @@ Concept: [`OKOA_AI_CONCEPT_NOTE.md`](OKOA_AI_CONCEPT_NOTE.md) · Delivery plan:
 (Meta developer portal).
 
 ```bash
+REPO_ROOT="$(pwd)"   # set once; lets every step below work from any directory
+
 # 1. Install dependencies
-cd backend
+cd "$REPO_ROOT/backend"
 pip install -r requirements.txt
 
 # 2. Configure environment
@@ -119,7 +121,13 @@ python -c "import os,base64;print(base64.b64encode(os.urandom(32)).decode())"
 # Fill in WHATSAPP_* values from your Meta app (see docs/runbooks/)
 
 # 3. Start infrastructure (Postgres + Redis)
-docker compose up -d db redis
+#    The compose file lives at the repo root. If you're still inside backend/,
+#    plain `docker compose up` fails with:
+#      "no configuration file provided: not found"
+#    Fix A — point at the file explicitly (works from anywhere):
+docker compose -f "$REPO_ROOT/docker-compose.yml" up -d db redis
+#    Fix B — or just cd to the repo root first:
+#      cd "$REPO_ROOT" && docker compose up -d db redis
 
 # 4. Apply migrations
 alembic upgrade head
